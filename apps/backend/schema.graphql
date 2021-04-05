@@ -1,0 +1,22 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type Mutation {
+  save(input: UserDto!): UserOutputDto!
+}
+
+type Query {
+  get(id: Float!): UserOutputDto!
+  ping: String!
+}
+
+input UserDto {
+  age: Float!
+  name: String!
+}
+
+type UserOutputDto {
+  age: Float!
+  name: String!
+}
