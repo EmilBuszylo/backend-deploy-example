@@ -78,6 +78,9 @@ jobs:
           key: build-{{ .Environment.CIRCLE_WORKFLOW_ID }}
       - restore_cache:
           <<: *yarn_cache
+      - run: cp -r .elasticbeanstalk dist/apps/backend
+      - run: ls -a
+      - run: cd dist && ls -a
       - run:
           name: Installing deployment dependencies
           working_directory: /

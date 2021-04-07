@@ -14,9 +14,7 @@
           "builder": "@nrwl/workspace:run-commands",
           "options": {
             "commands": [
-              "cp -r .elasticbeanstalk dist/apps/backend",
-              "yarn add npm-add-script",
-              "sleep 5 && cd dist/apps/backend && yarn",
+              "cd dist/apps/backend && yarn",
               "sleep 20 && cd dist/apps/backend && yarn add pm2 apollo-server-express npm-add-script && yarn add dotenv",
               "sleep 30 && cd dist/apps/backend && npx npmAddScript -k start -v 'pm2-runtime start main.js' && eb deploy staging-backend-deploy"
             ]
