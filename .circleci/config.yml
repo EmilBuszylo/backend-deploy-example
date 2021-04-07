@@ -1,0 +1,107 @@
+version: 2.1
+orbs:
+  node: circleci/node@3.0.0
+
+set_env: &set_env
+  name: Setup Environment Variables
+  command: |
+    if [[ ! -f dist/last-deploy.txt ]]
+    then
+      mkdir dist && git rev-parse HEAD~1 > dist/last-deploy.txt
+    fi
+    echo 'export AFFECTED_ARGS="--base $(cat dist/last-deploy.txt)"' >> $BASH_ENV
+    source $BASH_ENV
+    echo $AFFECTED_ARGS
+
+defaults: &defaults
+  working_directory: ~/repo
+  docker:
+    - image: circleci/node:12.20.2
+  parameters:
+    tag:
+      default: '12.20.2'
+      type: string
+
+yarn_cache: &yarn_cache
+  keys:
+    - node-deps-node12-{{ checksum "yarn.lock" }}
+    # fallback to using the latest cache if no exact match is found
+    - node-deps-node12-
+
+deploy_cache: &deploy_cache
+  key: last-deploy-sha
+
+yarn_install: &yarn_install
+  name: Install Dependencies
+  command: yarn install --frozen-lockfile --non-interactive
+
+jobs:
+  install:
+    <<: *defaults
+    steps:
+      - checkout
+      - restore_cache:
+          <<: *yarn_cache
+      - run:
+          <<: *yarn_install
+      - save_cache:
+          key: node-deps-node12-{{ checksum "yarn.lock" }}
+          paths:
+            - ~/.cache
+            - node_modules
+  build:
+    <<: *defaults
+    steps:
+      - checkout
+      - restore_cache:
+          <<: *deploy_cache
+      - run:
+          <<: *set_env
+      - restore_cache:
+          <<: *yarn_cache
+      - run: yarn affected:build -- ${AFFECTED_ARGS} --parallel --maxWorkers=2 --configuration production
+      - save_cache:
+          key: build-{{ .Environment.CIRCLE_WORKFLOW_ID }}
+          paths:
+            - dist
+      - store_artifacts:
+          path: dist
+  deploy-prod:
+    <<: *defaults
+    steps:
+      - checkout
+      - run:
+          <<: *set_env
+      - restore_cache:
+          <<: *deploy_cache
+      - restore_cache:
+          key: build-{{ .Environment.CIRCLE_WORKFLOW_ID }}
+      - restore_cache:
+          <<: *yarn_cache
+      - run:
+          name: Installing deployment dependencies
+          working_directory: /
+          command: |
+            sudo apt-get -y -qq update
+            sudo apt-get install python3-pip python3-dev build-essential
+            sudo pip3 install awsebcli
+      - run: yarn nx affected --target=deploy-prod ${AFFECTED_ARGS} --parallel --maxWorkers=2 --configuration production
+      - save_cache:
+          key: build-{{ .Environment.CIRCLE_WORKFLOW_ID }}
+          paths:
+            - dist
+      - store_artifacts:
+          path: dist
+
+workflows:
+  version: 2.1
+  pr_check:
+    jobs:
+      - install
+      - build:
+          requires:
+            - install
+      - deploy-prod:
+          requires:
+            - install
+            - build

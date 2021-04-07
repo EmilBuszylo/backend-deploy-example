@@ -10,6 +10,18 @@
       "sourceRoot": "apps/backend/src",
       "projectType": "application",
       "targets": {
+        "deploy-prod": {
+          "builder": "@nrwl/workspace:run-commands",
+          "options": {
+            "commands": [
+              "cp -r .elasticbeanstalk dist/apps/backend",
+              "yarn add npm-add-script",
+              "sleep 5 && cd dist/apps/backend && yarn",
+              "sleep 20 && cd dist/apps/backend && yarn add pm2 apollo-server-express npm-add-script && yarn add dotenv",
+              "sleep 30 && cd dist/apps/backend && npx npmAddScript -k start -v 'pm2-runtime start main.js' && eb deploy staging-backend-deploy"
+            ]
+          }
+        },
         "build": {
           "executor": "@nrwl/node:build",
           "outputs": ["{options.outputPath}"],
@@ -17,7 +29,8 @@
             "outputPath": "dist/apps/backend",
             "main": "apps/backend/src/main.ts",
             "tsConfig": "apps/backend/tsconfig.app.json",
-            "assets": ["apps/backend/src/assets"]
+            "assets": ["apps/backend/src/assets"],
+            "generatePackageJson": true
           },
           "configurations": {
             "production": {
