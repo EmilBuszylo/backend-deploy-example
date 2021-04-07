@@ -80,7 +80,7 @@ jobs:
           <<: *yarn_cache
       - run: cp -r .elasticbeanstalk dist/apps/backend
       - run: ls -a
-      - run: cd dist && ls -a
+      - run: cd dist/apps/backend && ls -a
       - run:
           name: Installing deployment dependencies
           working_directory: /

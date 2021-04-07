@@ -1,10 +1,19 @@
 branch-defaults:
   default:
     environment: staging-backend-deploy
+environment-defaults:
+  staging-backend-deploy:
+    branch: null
+    repository: null
 global:
   application_name: backend-deploy
+  default_ec2_keyname: null
   default_platform: Node.js 12 running on 64bit Amazon Linux 2
   default_region: eu-central-1
   include_git_submodules: true
-  sc: git
+  instance_profile: null
+  platform_name: null
+  platform_version: null
+  profile: eb-cli
+  sc: null
   workspace_type: Application
